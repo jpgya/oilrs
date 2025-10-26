@@ -8,53 +8,94 @@
 <script type="module" src="login.js"></script>
 </head>
 <body>
-
 <main class="auth-container">
-  <div class="auth-box">
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">ログイン</button>
-      <button class="auth-tab" data-tab="register">新規登録</button>
-    </div>
-
-    <div class="auth-content">
-      <section id="login" class="auth-section active">
-        <h2>アカウントにログイン</h2>
-        <input type="email" id="loginEmail" placeholder="📧 メールアドレス">
-        <input type="password" id="loginPassword" placeholder="🔒 パスワード">
-        <button id="loginBtn">ログイン</button>
-      </section>
-
-      <section id="register" class="auth-section">
-        <h2>新しいアカウントを作成</h2>
-        <input type="email" id="regEmail" placeholder="📧 メールアドレス">
-        <input type="password" id="regPassword" placeholder="🔒 パスワード (6文字以上)">
-        <button id="regBtn">アカウント作成</button>
-      </section>
-    </div>
-
-    <p id="message"></p>
-  </div>
+<div class="auth-box">
+<div class="auth-tabs">
+<button class="auth-tab active" data-tab="login">ログイン</button>
+<button class="auth-tab" data-tab="register">新規登録</button>
+</div>
+<div class="auth-content">
+<section id="login" class="auth-section active">
+<h2>アカウントにログイン</h2>
+<input type="email" id="loginEmail" placeholder="📧 メールアドレス">
+<input type="password" id="loginPassword" placeholder="🔒 パスワード">
+<button id="loginBtn">ログイン</button>
+</section>
+<section id="register" class="auth-section">
+<h2>新しいアカウントを作成</h2>
+<input type="text" id="regUsername" placeholder="👤 ユーザーネーム" maxlength="20">
+<input type="email" id="regEmail" placeholder="📧 メールアドレス">
+<input type="password" id="regPassword" placeholder="🔒 パスワード (6文字以上)">
+<div class="avatar-selection">
+<h3>アバターを選択</h3>
+<div id="avatarGrid" class="avatar-grid">
+<!-- アバターはJavaScriptで動的に生成 -->
+</div>
+<input type="hidden" id="selectedAvatar" value="">
+</div>
+<button id="regBtn">アカウント作成</button>
+</section>
+</div>
+<p id="message"></p>
+</div>
 </main>
-
 <script>
 // タブ切り替え
 document.querySelectorAll('.auth-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    const target = tab.dataset.tab;
-    
-    // タブのアクティブ状態を切り替え
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    
-    // セクションの表示を切り替え
-    document.querySelectorAll('.auth-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(target).classList.add('active');
-    
-    // メッセージをクリア
-    document.getElementById('message').textContent = '';
-  });
+tab.addEventListener('click', () => {
+const target = tab.dataset.tab;
+// タブのアクティブ状態を切り替え
+document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+tab.classList.add('active');
+// セクションの表示を切り替え
+document.querySelectorAll('.auth-section').forEach(s => s.classList.remove('active'));
+document.getElementById(target).classList.add('active');
+// メッセージをクリア
+document.getElementById('message').textContent = '';
+ });
 });
-</script>
 
+// アバター読み込み
+async function loadAvatars() {
+  try {
+    const response = await fetch('skin.json');
+    const avatars = await response.json();
+    const avatarGrid = document.getElementById('avatarGrid');
+    
+    avatars.forEach(avatar => {
+      const avatarItem = document.createElement('div');
+      avatarItem.className = 'avatar-item';
+      avatarItem.dataset.avatarUrl = avatar.image;
+      avatarItem.innerHTML = `
+        <img src="${avatar.image}" alt="${avatar.name}">
+        <span>${avatar.name}</span>
+      `;
+      
+      avatarItem.addEventListener('click', () => {
+        // 全てのアバターから選択状態を解除
+        document.querySelectorAll('.avatar-item').forEach(item => {
+          item.classList.remove('selected');
+        });
+        // クリックされたアバターを選択
+        avatarItem.classList.add('selected');
+        document.getElementById('selectedAvatar').value = avatar.image;
+      });
+      
+      avatarGrid.appendChild(avatarItem);
+    });
+    
+    // デフォルトで最初のアバターを選択
+    if(avatars.length > 0) {
+      avatarGrid.firstChild.classList.add('selected');
+      document.getElementById('selectedAvatar').value = avatars[0].image;
+    }
+  } catch (error) {
+    console.error('アバターの読み込みに失敗:', error);
+  }
+}
+
+// ページ読み込み時にアバターをロード
+loadAvatars();
+</script>
 </body>
 </html>

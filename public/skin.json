@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "サイバー戦士",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=cyber1&backgroundColor=00ffff"
+  },
+  {
+    "id": 2,
+    "name": "ネオンハンター",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=neon2&backgroundColor=ff00ff"
+  },
+  {
+    "id": 3,
+    "name": "デジタルナイト",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=digital3&backgroundColor=00ff00"
+  },
+  {
+    "id": 4,
+    "name": "プラズマガール",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=plasma4&backgroundColor=ffff00"
+  },
+  {
+    "id": 5,
+    "name": "シャドウローグ",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=shadow5&backgroundColor=ff0000"
+  },
+  {
+    "id": 6,
+    "name": "レーザーエース",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=laser6&backgroundColor=0000ff"
+  },
+  {
+    "id": 7,
+    "name": "ホログラムキング",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=holo7&backgroundColor=ff6600"
+  },
+  {
+    "id": 8,
+    "name": "クォンタムヒーロー",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=quantum8&backgroundColor=6600ff"
+  }
+]
