@@ -72,4 +72,3 @@ window.logout = async function() {
   await auth.signOut();
   window.location.href = "login.html";
 };
-
