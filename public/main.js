@@ -59,6 +59,14 @@ onSnapshot(serverRef, docSnap=>{
   if(docSnap.exists()) onlineCount.textContent = docSnap.data().onlinePlayers || 0;
 });
 
+// サーバーステータスリアルタイム
+onSnapshot(serverRef, docSnap=>{
+  if(docSnap.exists()) {
+    const status = docSnap.data().serverStatus || "不明";
+    document.getElementById("serverStatus").textContent = status;
+  }
+});
+
 // ログアウト関数をグローバルに公開
 window.logout = async function() {
   await auth.signOut();

@@ -13,7 +13,7 @@
 <nav>
   <button class="tab-btn active" data-tab="news">ニュース</button>
   <button class="tab-btn" data-tab="server">サーバー情報</button>
-  <button class="tab-btn" data-tab="game">ゲーム</button>
+  <button class="tab-btn" onclick="location.href='game.html'">ゲーム</button>
   <button class="tab-btn" onclick="location.href='account.html'">アカウント</button>
   <button class="tab-btn" onclick="location.href='friend.html'">フレンド</button>
   <button class="tab-btn" onclick="logout()">ログアウト</button>
@@ -28,13 +28,11 @@
   <section id="server">
     <h2>サーバー情報</h2>
     <p>オンラインプレイヤー数: <span id="onlineCount">0</span></p>
+    <p>サーバーステータス: <span id="serverStatus">不明</span></p>
+
   </section>
 
-  <section id="game">
-    <h2>ゲーム画面</h2>
-    <div id="gameContainer"></div>
-    <p>※簡易ブロスタ風ゲーム</p>
-  </section>
+  
 </main>
 
 <script type="module" src="phaserClient.js"></script>
