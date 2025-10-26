@@ -4,95 +4,321 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oilrs - アカウント</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="account.css">
 <script type="module">
 import { auth, db } from "./firebaseConfig.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { onAuthStateChanged, signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 const nameEl = document.getElementById("name");
 const avatarEl = document.getElementById("avatar");
 const uidEl = document.getElementById("uid");
+const emailEl = document.getElementById("email");
 const friendsCountEl = document.getElementById("friendsCount");
+const createdAtEl = document.getElementById("createdAt");
 const editBtn = document.getElementById("editBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const modal = document.getElementById("editModal");
+const closeModal = document.getElementById("closeModal");
+const editNameInput = document.getElementById("editName");
+const saveBtn = document.getElementById("saveBtn");
+const avatarGrid = document.getElementById("avatarGrid");
+const changePasswordBtn = document.getElementById("changePasswordBtn");
+const passwordModal = document.getElementById("passwordModal");
+const closePasswordModal = document.getElementById("closePasswordModal");
+const savePasswordBtn = document.getElementById("savePasswordBtn");
+const message = document.getElementById("message");
+const passwordMessage = document.getElementById("passwordMessage");
 
+let currentUser;
+let selectedAvatarUrl = "";
+
+// ログイン状態監視
 onAuthStateChanged(auth, async (user)=>{
-  if(!user){ window.location.href="index.html"; return; }
+  if(!user){ window.location.href="login.html"; return; }
   
-  uidEl.textContent = user.uid; // UID表示
+  currentUser = user;
+  uidEl.textContent = user.uid;
+  emailEl.textContent = user.email;
 
   const userDoc = await getDoc(doc(db,"users",user.uid));
   if(userDoc.exists()){
     const data = userDoc.data();
     nameEl.textContent = data.name || "未設定";
     avatarEl.src = data.avatar || "default_avatar.png";
-    friendsCountEl.textContent = (data.friends?.length || 0) + " 人";
+    selectedAvatarUrl = data.avatar || "";
+    friendsCountEl.textContent = (data.friends?.length || 0);
+    
+    // 作成日時を表示
+    if(data.createdAt) {
+      const date = new Date(data.createdAt);
+      createdAtEl.textContent = date.toLocaleDateString('ja-JP');
+    }
+  }
+  
+  // アバター読み込み
+  loadAvatars();
+});
+
+// アバター読み込み
+async function loadAvatars() {
+  try {
+    const response = await fetch('skin.json');
+    const avatars = await response.json();
+    
+    avatars.forEach(avatar => {
+      const avatarItem = document.createElement('div');
+      avatarItem.className = 'avatar-item';
+      if(avatar.image === selectedAvatarUrl) {
+        avatarItem.classList.add('selected');
+      }
+      avatarItem.innerHTML = `
+        <img src="${avatar.image}" alt="${avatar.name}">
+        <span>${avatar.name}</span>
+      `;
+      
+      avatarItem.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-item').forEach(item => {
+          item.classList.remove('selected');
+        });
+        avatarItem.classList.add('selected');
+        selectedAvatarUrl = avatar.image;
+      });
+      
+      avatarGrid.appendChild(avatarItem);
+    });
+  } catch (error) {
+    console.error('アバターの読み込みに失敗:', error);
+  }
+}
+
+// 編集モーダルを開く
+editBtn.addEventListener("click", ()=>{
+  editNameInput.value = nameEl.textContent;
+  modal.style.display = "flex";
+});
+
+// モーダルを閉じる
+closeModal.addEventListener("click", ()=>{
+  modal.style.display = "none";
+  message.textContent = "";
+});
+
+// 保存
+saveBtn.addEventListener("click", async ()=>{
+  const newName = editNameInput.value.trim();
+  
+  if(!newName || newName.length < 3) {
+    message.textContent = "ユーザーネームは3文字以上で入力してください";
+    message.style.color = "#f55";
+    return;
+  }
+  
+  try {
+    const userDoc = doc(db, "users", currentUser.uid);
+    await updateDoc(userDoc, {
+      name: newName,
+      avatar: selectedAvatarUrl
+    });
+    
+    nameEl.textContent = newName;
+    avatarEl.src = selectedAvatarUrl;
+    message.textContent = "保存しました！";
+    message.style.color = "#0f0";
+    
+    setTimeout(() => {
+      modal.style.display = "none";
+      message.textContent = "";
+    }, 1500);
+    
+  } catch (error) {
+    message.textContent = "保存に失敗しました: " + error.message;
+    message.style.color = "#f55";
   }
 });
 
-// 編集画面へ
-editBtn.addEventListener("click", ()=>{
-  window.location.href="edit_account.html";
+// パスワード変更モーダルを開く
+changePasswordBtn.addEventListener("click", ()=>{
+  passwordModal.style.display = "flex";
+});
+
+// パスワードモーダルを閉じる
+closePasswordModal.addEventListener("click", ()=>{
+  passwordModal.style.display = "none";
+  passwordMessage.textContent = "";
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+});
+
+// パスワード変更
+savePasswordBtn.addEventListener("click", async ()=>{
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  
+  if(!currentPassword || !newPassword || !confirmPassword) {
+    passwordMessage.textContent = "全ての項目を入力してください";
+    passwordMessage.style.color = "#f55";
+    return;
+  }
+  
+  if(newPassword !== confirmPassword) {
+    passwordMessage.textContent = "新しいパスワードが一致しません";
+    passwordMessage.style.color = "#f55";
+    return;
+  }
+  
+  if(newPassword.length < 6) {
+    passwordMessage.textContent = "パスワードは6文字以上で入力してください";
+    passwordMessage.style.color = "#f55";
+    return;
+  }
+  
+  try {
+    // 再認証
+    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+    await reauthenticateWithCredential(currentUser, credential);
+    
+    // パスワード更新
+    await updatePassword(currentUser, newPassword);
+    
+    passwordMessage.textContent = "パスワードを変更しました！";
+    passwordMessage.style.color = "#0f0";
+    
+    setTimeout(() => {
+      passwordModal.style.display = "none";
+      passwordMessage.textContent = "";
+      document.getElementById("currentPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    }, 1500);
+    
+  } catch (error) {
+    if(error.code === "auth/wrong-password") {
+      passwordMessage.textContent = "現在のパスワードが間違っています";
+    } else {
+      passwordMessage.textContent = "エラー: " + error.message;
+    }
+    passwordMessage.style.color = "#f55";
+  }
+});
+
+// モーダル外クリックで閉じる
+window.addEventListener("click", (e)=>{
+  if(e.target === modal) {
+    modal.style.display = "none";
+    message.textContent = "";
+  }
+  if(e.target === passwordModal) {
+    passwordModal.style.display = "none";
+    passwordMessage.textContent = "";
+  }
 });
 
 // ログアウト
 logoutBtn.addEventListener("click", async ()=>{
   await signOut(auth);
-  window.location.href="index.html";
+  window.location.href="login.html";
 });
 </script>
-<style>
-body{
-  font-family:'Roboto',sans-serif;
-  background:linear-gradient(135deg,#121212,#1a1a1a);
-  color:#fff;
-  text-align:center;
-  padding:20px;
-}
-h1{ text-shadow:0 0 5px #0ff; }
-img{width:120px;height:120px;border-radius:50%;margin:10px 0; border:2px solid #0ff;}
-.info-box{
-  background:#222;
-  padding:15px;
-  margin:10px auto;
-  border-radius:10px;
-  width:250px;
-  text-align:left;
-  box-shadow:0 0 10px #0ff;
-}
-.info-box p{margin:5px 0;}
-button{
-  padding:10px 20px;
-  margin:5px;
-  border-radius:8px;
-  border:none;
-  background:#0ff;
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.3s;
-}
-button:hover{ transform:scale(1.05); }
-a{ display:block; margin-top:20px; color:#0ff; text-decoration:none;}
-a:hover{text-decoration:underline;}
-</style>
 </head>
 <body>
 
-<h1>アカウント情報</h1>
-<img id="avatar" src="default_avatar.png" alt="アバター">
-
-<div class="info-box">
-  <p>名前: <span id="name"></span></p>
-  <p>UID: <span id="uid"></span></p>
-  <p>フレンド数: <span id="friendsCount">0</span></p>
+<div class="account-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <img id="avatar" src="default_avatar.png" alt="アバター" class="profile-avatar">
+      <h1 id="name" class="profile-name">読み込み中...</h1>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="friendsCount">0</div>
+        <div class="stat-label">フレンド</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="createdAt">-</div>
+        <div class="stat-label">登録日</div>
+      </div>
+    </div>
+    
+    <div class="info-section">
+      <h2>アカウント情報</h2>
+      <div class="info-item">
+        <span class="info-label">📧 メール:</span>
+        <span class="info-value" id="email">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">🆔 UID:</span>
+        <span class="info-value uid-text" id="uid">-</span>
+      </div>
+    </div>
+    
+    <div class="button-group">
+      <button id="editBtn" class="btn btn-primary">
+        <span>✏️</span> プロフィール編集
+      </button>
+      <button id="changePasswordBtn" class="btn btn-secondary">
+        <span>🔒</span> パスワード変更
+      </button>
+      <button id="logoutBtn" class="btn btn-logout">
+        <span>🚪</span> ログアウト
+      </button>
+    </div>
+    
+    <a href="index.html" class="back-link">← メインに戻る</a>
+  </div>
 </div>
 
-<button id="editBtn">編集</button>
-<button id="logoutBtn">ログアウト</button>
+<!-- 編集モーダル -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeModal">&times;</span>
+    <h2>プロフィール編集</h2>
+    
+    <div class="form-group">
+      <label>ユーザーネーム</label>
+      <input type="text" id="editName" placeholder="ユーザーネーム" maxlength="20">
+    </div>
+    
+    <div class="form-group">
+      <label>アバター選択</label>
+      <div id="avatarGrid" class="avatar-grid"></div>
+    </div>
+    
+    <p id="message" class="modal-message"></p>
+    <button id="saveBtn" class="btn btn-primary">保存</button>
+  </div>
+</div>
 
-<p><a href="index.html">戻る</a></p>
+<!-- パスワード変更モーダル -->
+<div id="passwordModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closePasswordModal">&times;</span>
+    <h2>パスワード変更</h2>
+    
+    <div class="form-group">
+      <label>現在のパスワード</label>
+      <input type="password" id="currentPassword" placeholder="現在のパスワード">
+    </div>
+    
+    <div class="form-group">
+      <label>新しいパスワード</label>
+      <input type="password" id="newPassword" placeholder="新しいパスワード (6文字以上)">
+    </div>
+    
+    <div class="form-group">
+      <label>新しいパスワード (確認)</label>
+      <input type="password" id="confirmPassword" placeholder="新しいパスワード (確認)">
+    </div>
+    
+    <p id="passwordMessage" class="modal-message"></p>
+    <button id="savePasswordBtn" class="btn btn-primary">変更</button>
+  </div>
+</div>
 
 </body>
 </html>
