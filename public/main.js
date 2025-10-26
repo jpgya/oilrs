@@ -16,7 +16,6 @@ const regBtn = document.getElementById("regBtn");
 const message = document.getElementById("message");
 const newsList = document.getElementById("newsList");
 const onlineCount = document.getElementById("onlineCount");
-
 const buttons = document.querySelectorAll('.tab-btn');
 const sections = document.querySelectorAll('main section');
 buttons.forEach(btn => {
