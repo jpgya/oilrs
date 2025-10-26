@@ -73,5 +73,3 @@ window.logout = async function() {
   window.location.href = "login.html";
 };
 
-// ゲーム起動
-startGame("gameContainer");
