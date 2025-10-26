@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oilrs - アカウント設定</title>
+<script type="module">
+import { auth, db } from "./firebaseConfig.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+// DOM
+const accountEmail = document.getElementById("accountEmail");
+const profileName = document.getElementById("profileName");
+const profileAvatar = document.getElementById("profileAvatar");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const accountMessage = document.getElementById("accountMessage");
+const avatarPreview = document.getElementById("avatarPreview");
+
+let currentUser;
+
+// ログイン監視
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){ window.location.href="index.html"; return; }
+  currentUser = user;
+  accountEmail.textContent = user.email;
+  const userDoc = doc(db,"users",user.uid);
+  const docSnap = await getDoc(userDoc);
+  if(docSnap.exists()){
+    const data = docSnap.data();
+    profileName.value = data.name || "";
+    profileAvatar.value = data.avatar || "";
+    avatarPreview.src = data.avatar || "";
+  }
+});
+
+// 保存
+saveProfileBtn.addEventListener("click", async ()=>{
+  if(!currentUser) return;
+  const userDoc = doc(db,"users",currentUser.uid);
+  await setDoc(userDoc,{name:profileName.value,avatar:profileAvatar.value},{merge:true});
+  accountMessage.textContent="プロフィール更新完了";
+  avatarPreview.src=profileAvatar.value;
+});
+</script>
+<style>
+body{font-family:Arial;background:#121212;color:#fff;padding:20px;}
+input,button{padding:10px;margin:5px;border-radius:5px;border:none;}
+input{width:200px;}
+button{cursor:pointer;background:#444;color:#fff;}
+#avatarPreview{border-radius:50%;width:100px;height:100px;margin-top:10px;}
+#accountMessage{color:#0f0;margin-top:10px;}
+</style>
+</head>
+<body>
+<h1>アカウント設定</h1>
+<p>メール: <span id="accountEmail"></span></p>
+<p>ユーザー名: <input type="text" id="profileName" placeholder="名前"></p>
+<p>アバターURL: <input type="text" id="profileAvatar" placeholder="アバターURL"></p>
+<button id="saveProfileBtn">保存</button>
+<p id="accountMessage"></p>
+<div><img id="avatarPreview" src="" alt="アバター"></div>
+<p><a href="index.html">戻る</a></p>
+</body>
+</html>
