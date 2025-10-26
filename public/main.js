@@ -1,23 +1,15 @@
 import { auth, db } from "./firebaseConfig.js";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { collection, onSnapshot, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { doc, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 import { startGame } from "./phaserClient.js";
 
-// タブ切替
-
-
 // DOM
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-const loginBtn = document.getElementById("loginBtn");
-const regEmail = document.getElementById("regEmail");
-const regPassword = document.getElementById("regPassword");
-const regBtn = document.getElementById("regBtn");
-const message = document.getElementById("message");
 const newsList = document.getElementById("newsList");
 const onlineCount = document.getElementById("onlineCount");
 const buttons = document.querySelectorAll('.tab-btn');
 const sections = document.querySelectorAll('main section');
+
+// タブ切替
 buttons.forEach(btn => {
   btn.addEventListener('click', () => {
     buttons.forEach(b=>b.classList.remove('active'));
@@ -26,42 +18,39 @@ buttons.forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add('active');
   });
 });
-// ログイン
-loginBtn.addEventListener("click", async ()=>{
-  try{
-    const userCredential = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-    message.textContent = `ログイン成功: ${userCredential.user.email}`;
-  }catch(e){ message.textContent = e.message; }
-});
 
-// 新規登録
-regBtn.addEventListener("click", async ()=>{
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth, regEmail.value, regPassword.value);
-    message.textContent = `登録成功: ${userCredential.user.email}`;
-    const userDoc = doc(db,"users",userCredential.user.uid);
-    await setDoc(userDoc,{name:"",avatar:"",friends:[]});
-  }catch(e){ message.textContent = e.message; }
-});
+// ニュースをJSONから取得
+async function loadNews() {
+  try {
+    const response = await fetch('news.json');
+    const newsData = await response.json();
+    
+    newsList.innerHTML = "";
+    newsData.forEach(item => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="news-date">${item.date}</span> ${item.text}`;
+      newsList.appendChild(li);
+    });
+  } catch (error) {
+    console.error("ニュースの読み込みに失敗:", error);
+    newsList.innerHTML = "<li>ニュースの読み込みに失敗しました</li>";
+  }
+}
+
+// ページ読み込み時にニュースを取得
+loadNews();
 
 // ログイン状態監視
 onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    const serverRef = doc(db,"server","status");
-    await setDoc(serverRef,{onlinePlayers:increment(1)},{merge:true});
-    buttons.forEach(b=>b.disabled=false);
+  if(!user){ 
+    window.location.href="login.html"; 
+    return; 
   }
-});
-
-// ニュース取得
-const newsCol = collection(db,"news");
-onSnapshot(newsCol,snapshot=>{
-  newsList.innerHTML="";
-  snapshot.forEach(doc=>{
-    const li = document.createElement("li");
-    li.textContent = doc.data().text;
-    newsList.appendChild(li);
-  });
+  
+  // オンライン人数をインクリメント
+  const serverRef = doc(db,"server","status");
+  await setDoc(serverRef,{onlinePlayers:increment(1)},{merge:true});
+  buttons.forEach(b=>b.disabled=false);
 });
 
 // オンライン人数リアルタイム
@@ -69,6 +58,12 @@ const serverRef = doc(db,"server","status");
 onSnapshot(serverRef, docSnap=>{
   if(docSnap.exists()) onlineCount.textContent = docSnap.data().onlinePlayers || 0;
 });
+
+// ログアウト関数をグローバルに公開
+window.logout = async function() {
+  await auth.signOut();
+  window.location.href = "login.html";
+};
 
 // ゲーム起動
 startGame("gameContainer");
