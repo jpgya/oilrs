@@ -78,13 +78,21 @@ regBtn.addEventListener("click", async () => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
     // Firestoreにユーザー情報を保存
-    const userDoc = doc(db, "users", userCredential.user.uid);
-    await setDoc(userDoc, {
-      name: username,
-      avatar: avatar,
-      friends: [],
-      createdAt: new Date().toISOString()
-    });
+    try {
+      const userDoc = doc(db, "users", userCredential.user.uid);
+      await setDoc(userDoc, {
+        name: username,
+        avatar: avatar,
+        friends: [],
+        createdAt: new Date().toISOString()
+      });
+      console.log("Firestore write succeeded!");
+    } catch (e) {
+       console.error("Firestore write error:", e);
+       message.textContent = "ユーザー情報の保存に失敗しました: " + e.message;
+      message.style.color = "#f55";
+    }
+
     
     message.textContent = `アカウント作成成功！ようこそ ${username} さん！`;
     message.style.color = "#0f0";
