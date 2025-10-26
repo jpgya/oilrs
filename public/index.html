@@ -4,96 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oilrs - Online</title>
-<script type="module">
-import { auth, db } from "./firebaseConfig.js";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { collection, onSnapshot, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-// タブ切替
-const buttons = document.querySelectorAll('.tab-btn');
-const sections = document.querySelectorAll('main section');
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    buttons.forEach(b=>b.classList.remove('active'));
-    sections.forEach(s=>s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
-});
-
-// DOM
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-const loginBtn = document.getElementById("loginBtn");
-const regEmail = document.getElementById("regEmail");
-const regPassword = document.getElementById("regPassword");
-const regBtn = document.getElementById("regBtn");
-const message = document.getElementById("message");
-const newsList = document.getElementById("newsList");
-const onlineCount = document.getElementById("onlineCount");
-
-// ログイン
-loginBtn.addEventListener("click", async ()=>{
-  try{
-    const userCredential = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-    message.textContent = `ログイン成功: ${userCredential.user.email}`;
-  }catch(e){ message.textContent = e.message; }
-});
-
-// 新規登録
-regBtn.addEventListener("click", async ()=>{
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth, regEmail.value, regPassword.value);
-    message.textContent = `登録成功: ${userCredential.user.email}`;
-    // Firestoreに初期プロフィール
-    const userDoc = doc(db,"users",userCredential.user.uid);
-    await setDoc(userDoc,{name:"",avatar:"",friends:[]});
-  }catch(e){ message.textContent = e.message; }
-});
-
-// ログイン状態監視
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    // オンライン人数管理
-    const serverRef = doc(db,"server","status");
-    await setDoc(serverRef,{onlinePlayers:increment(1)},{merge:true});
-    buttons.forEach(b=>b.disabled=false);
-  }
-});
-
-// ニュース取得
-const newsCol = collection(db,"news");
-onSnapshot(newsCol,snapshot=>{
-  newsList.innerHTML="";
-  snapshot.forEach(doc=>{
-    const li = document.createElement("li");
-    li.textContent = doc.data().text;
-    newsList.appendChild(li);
-  });
-});
-
-// オンライン人数リアルタイム表示
-const serverRef = doc(db,"server","status");
-onSnapshot(serverRef, docSnap=>{
-  if(docSnap.exists()) onlineCount.textContent = docSnap.data().onlinePlayers || 0;
-});
-</script>
-
-<style>
-body{font-family:Arial;background:#121212;color:#fff;margin:0;padding:0;}
-header{background:#1f1f1f;padding:10px;text-align:center;}
-nav{display:flex;gap:10px;background:#2a2a2a;padding:10px;justify-content:center;}
-nav button{background:none;color:#fff;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;}
-nav button.active{background:#444;}
-main{padding:20px;}
-section{display:none;}
-section.active{display:block;}
-input,button{padding:10px;margin:5px;border-radius:5px;border:none;}
-input{width:200px;}
-button{cursor:pointer;background:#444;color:#fff;}
-#message{color:#f88;margin-top:10px;}
-#gameContainer{width:800px;height:600px;background:#333;margin:auto;}
-</style>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="firebaseConfig.js"></script>
+<script type="module" src="main.js"></script>
 </head>
 <body>
 
@@ -104,45 +17,28 @@ button{cursor:pointer;background:#444;color:#fff;}
   <button class="tab-btn" data-tab="news">ニュース</button>
   <button class="tab-btn" data-tab="server">サーバー情報</button>
   <button class="tab-btn" data-tab="game">ゲーム</button>
-  <button class="tab-btn" data-tab="account" onclick="location.href='account.html'">アカウント</button>
   <button class="tab-btn" data-tab="friend" onclick="location.href='friend.html'">フレンド</button>
 </nav>
 
 <main>
-<section id="login" class="active">
-<h2>ログイン</h2>
-<input type="email" id="loginEmail" placeholder="メール"><br>
-<input type="password" id="loginPassword" placeholder="パスワード"><br>
-<button id="loginBtn">ログイン</button>
 
-<h2>新規登録</h2>
-<input type="email" id="regEmail" placeholder="メール"><br>
-<input type="password" id="regPassword" placeholder="パスワード"><br>
-<button id="regBtn">登録</button>
-<p id="message"></p>
-</section>
 
 <section id="news">
-<h2>ニュース</h2>
-<ul id="newsList"></ul>
+  <h2>ニュース</h2>
+  <ul id="newsList"></ul>
 </section>
 
 <section id="server">
-<h2>サーバー情報</h2>
-<p>オンラインプレイヤー数: <span id="onlineCount">0</span></p>
+  <h2>サーバー情報</h2>
+  <p>オンラインプレイヤー数: <span id="onlineCount">0</span></p>
 </section>
 
 <section id="game">
-<h2>ゲーム画面</h2>
-<div id="gameContainer"></div>
-<p>※簡易ブロスタ風ゲーム</p>
+  <h2>ゲーム画面</h2>
+  <div id="gameContainer"></div>
+  <p>※簡易ブロスタ風ゲーム</p>
 </section>
 </main>
-
-<script type="module">
-import { startGame } from "./phaserClient.js";
-startGame("gameContainer");
-</script>
 
 </body>
 </html>

@@ -3,63 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oilrs - アカウント設定</title>
+<title>Oilrs - アカウント</title>
+<link rel="stylesheet" href="style.css">
 <script type="module">
 import { auth, db } from "./firebaseConfig.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-// DOM
-const accountEmail = document.getElementById("accountEmail");
-const profileName = document.getElementById("profileName");
-const profileAvatar = document.getElementById("profileAvatar");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
-const accountMessage = document.getElementById("accountMessage");
-const avatarPreview = document.getElementById("avatarPreview");
+const nameEl = document.getElementById("name");
+const avatarEl = document.getElementById("avatar");
+const uidEl = document.getElementById("uid");
+const friendsCountEl = document.getElementById("friendsCount");
+const editBtn = document.getElementById("editBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-let currentUser;
-
-// ログイン監視
 onAuthStateChanged(auth, async (user)=>{
   if(!user){ window.location.href="index.html"; return; }
-  currentUser = user;
-  accountEmail.textContent = user.email;
-  const userDoc = doc(db,"users",user.uid);
-  const docSnap = await getDoc(userDoc);
-  if(docSnap.exists()){
-    const data = docSnap.data();
-    profileName.value = data.name || "";
-    profileAvatar.value = data.avatar || "";
-    avatarPreview.src = data.avatar || "";
+  
+  uidEl.textContent = user.uid; // UID表示
+
+  const userDoc = await getDoc(doc(db,"users",user.uid));
+  if(userDoc.exists()){
+    const data = userDoc.data();
+    nameEl.textContent = data.name || "未設定";
+    avatarEl.src = data.avatar || "default_avatar.png";
+    friendsCountEl.textContent = (data.friends?.length || 0) + " 人";
   }
 });
 
-// 保存
-saveProfileBtn.addEventListener("click", async ()=>{
-  if(!currentUser) return;
-  const userDoc = doc(db,"users",currentUser.uid);
-  await setDoc(userDoc,{name:profileName.value,avatar:profileAvatar.value},{merge:true});
-  accountMessage.textContent="プロフィール更新完了";
-  avatarPreview.src=profileAvatar.value;
+// 編集画面へ
+editBtn.addEventListener("click", ()=>{
+  window.location.href="edit_account.html";
+});
+
+// ログアウト
+logoutBtn.addEventListener("click", async ()=>{
+  await signOut(auth);
+  window.location.href="index.html";
 });
 </script>
 <style>
-body{font-family:Arial;background:#121212;color:#fff;padding:20px;}
-input,button{padding:10px;margin:5px;border-radius:5px;border:none;}
-input{width:200px;}
-button{cursor:pointer;background:#444;color:#fff;}
-#avatarPreview{border-radius:50%;width:100px;height:100px;margin-top:10px;}
-#accountMessage{color:#0f0;margin-top:10px;}
+body{
+  font-family:'Roboto',sans-serif;
+  background:linear-gradient(135deg,#121212,#1a1a1a);
+  color:#fff;
+  text-align:center;
+  padding:20px;
+}
+h1{ text-shadow:0 0 5px #0ff; }
+img{width:120px;height:120px;border-radius:50%;margin:10px 0; border:2px solid #0ff;}
+.info-box{
+  background:#222;
+  padding:15px;
+  margin:10px auto;
+  border-radius:10px;
+  width:250px;
+  text-align:left;
+  box-shadow:0 0 10px #0ff;
+}
+.info-box p{margin:5px 0;}
+button{
+  padding:10px 20px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+  background:#0ff;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover{ transform:scale(1.05); }
+a{ display:block; margin-top:20px; color:#0ff; text-decoration:none;}
+a:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
-<h1>アカウント設定</h1>
-<p>メール: <span id="accountEmail"></span></p>
-<p>ユーザー名: <input type="text" id="profileName" placeholder="名前"></p>
-<p>アバターURL: <input type="text" id="profileAvatar" placeholder="アバターURL"></p>
-<button id="saveProfileBtn">保存</button>
-<p id="accountMessage"></p>
-<div><img id="avatarPreview" src="" alt="アバター"></div>
+
+<h1>アカウント情報</h1>
+<img id="avatar" src="default_avatar.png" alt="アバター">
+
+<div class="info-box">
+  <p>名前: <span id="name"></span></p>
+  <p>UID: <span id="uid"></span></p>
+  <p>フレンド数: <span id="friendsCount">0</span></p>
+</div>
+
+<button id="editBtn">編集</button>
+<button id="logoutBtn">ログアウト</button>
+
 <p><a href="index.html">戻る</a></p>
+
 </body>
 </html>

@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oilrs - フレンド管理</title>
+<link rel="stylesheet" href="style.css">
 <script type="module">
 import { auth, db } from "./firebaseConfig.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { doc, getDoc, setDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { doc, setDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 const addFriendInput = document.getElementById("addFriendInput");
 const addFriendBtn = document.getElementById("addFriendBtn");
@@ -17,25 +18,29 @@ const friendMessage = document.getElementById("friendMessage");
 let currentUser;
 let userDocRef;
 
+// ログイン状態監視
 onAuthStateChanged(auth, async (user)=>{
   if(!user){ window.location.href="index.html"; return; }
-  currentUser=user;
+  currentUser = user;
   userDocRef = doc(db,"users",user.uid);
 
-  // フレンド一覧リアルタイム
+  // フレンド一覧リアルタイム取得
   onSnapshot(userDocRef, docSnap=>{
     friendList.innerHTML="";
     if(docSnap.exists()){
       const friends = docSnap.data().friends || [];
       friends.forEach(uid=>{
         const li = document.createElement("li");
+        li.className = "friend-item";
         li.textContent = uid;
-        // 削除ボタン
+
         const delBtn = document.createElement("button");
-        delBtn.textContent="削除";
-        delBtn.addEventListener("click",async ()=>{
+        delBtn.textContent = "削除";
+        delBtn.className = "delete-btn";
+        delBtn.addEventListener("click", async ()=>{
           await setDoc(userDocRef,{friends:arrayRemove(uid)},{merge:true});
         });
+
         li.appendChild(delBtn);
         friendList.appendChild(li);
       });
@@ -53,20 +58,66 @@ addFriendBtn.addEventListener("click", async ()=>{
 });
 </script>
 <style>
-body{font-family:Arial;background:#121212;color:#fff;padding:20px;}
-input,button{padding:10px;margin:5px;border-radius:5px;border:none;}
-button{cursor:pointer;background:#444;color:#fff;}
-#friendList li{margin:5px 0;}
-#friendMessage{color:#0f0;margin-top:10px;}
+body{
+  font-family:'Roboto',sans-serif;
+  background:linear-gradient(135deg,#121212,#1a1a1a);
+  color:#fff;
+  padding:20px;
+}
+h1{ text-align:center; text-shadow:0 0 5px #0ff; }
+input,button{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+input{ width:200px; }
+button{
+  cursor:pointer;
+  background:#0ff;
+  color:#000;
+  font-weight:bold;
+  transition:0.3s;
+}
+button:hover{ transform:scale(1.05); }
+#friendList{ margin-top:15px; list-style:none; padding:0; }
+.friend-item{
+  background:#222;
+  margin:5px 0;
+  padding:10px;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:0.3s;
+}
+.friend-item:hover{ background:#333; box-shadow:0 0 10px #0ff; }
+.delete-btn{
+  background:#f55;
+  color:#fff;
+  padding:5px 10px;
+  border-radius:5px;
+  font-size:0.9em;
+}
+.delete-btn:hover{ background:#ff8888; }
+#friendMessage{color:#0f0; margin-top:10px; text-align:center;}
+a{ display:block; margin-top:20px; text-align:center; color:#0ff; text-decoration:none;}
+a:hover{ text-decoration:underline; }
 </style>
 </head>
 <body>
+
 <h1>フレンド管理</h1>
-<p>フレンドUIDを入力:</p>
-<input type="text" id="addFriendInput" placeholder="UID">
-<button id="addFriendBtn">追加</button>
-<p id="friendMessage"></p>
+
+<div style="text-align:center;">
+  <input type="text" id="addFriendInput" placeholder="フレンドUID">
+  <button id="addFriendBtn">追加</button>
+  <p id="friendMessage"></p>
+</div>
+
 <ul id="friendList"></ul>
-<p><a href="index.html">戻る</a></p>
+
+<a href="index.html">← 戻る</a>
+
 </body>
 </html>
