@@ -4,16 +4,7 @@ import { collection, onSnapshot, doc, setDoc, increment } from "https://www.gsta
 import { startGame } from "./phaserClient.js";
 
 // タブ切替
-const buttons = document.querySelectorAll('.tab-btn');
-const sections = document.querySelectorAll('main section');
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    buttons.forEach(b=>b.classList.remove('active'));
-    sections.forEach(s=>s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
-});
+
 
 // DOM
 const loginEmail = document.getElementById("loginEmail");
@@ -26,6 +17,16 @@ const message = document.getElementById("message");
 const newsList = document.getElementById("newsList");
 const onlineCount = document.getElementById("onlineCount");
 
+const buttons = document.querySelectorAll('.tab-btn');
+const sections = document.querySelectorAll('main section');
+buttons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    buttons.forEach(b=>b.classList.remove('active'));
+    sections.forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
 // ログイン
 loginBtn.addEventListener("click", async ()=>{
   try{
