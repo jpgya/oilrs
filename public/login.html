@@ -4,30 +4,59 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oilrs - ログイン</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="login.css">
 <script type="module" src="login.js"></script>
 </head>
 <body>
 
-<header><h1>Oilrs Online - ログイン</h1></header>
+<header><h1>Oilrs Online</h1></header>
 
 <main class="auth-container">
-  <section>
-    <h2>ログイン</h2>
-    <input type="email" id="loginEmail" placeholder="メール"><br>
-    <input type="password" id="loginPassword" placeholder="パスワード"><br>
-    <button id="loginBtn">ログイン</button>
-  </section>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">ログイン</button>
+      <button class="auth-tab" data-tab="register">新規登録</button>
+    </div>
 
-  <section>
-    <h2>新規登録</h2>
-    <input type="email" id="regEmail" placeholder="メール"><br>
-    <input type="password" id="regPassword" placeholder="パスワード"><br>
-    <button id="regBtn">登録</button>
-  </section>
+    <div class="auth-content">
+      <section id="login" class="auth-section active">
+        <h2>アカウントにログイン</h2>
+        <input type="email" id="loginEmail" placeholder="📧 メールアドレス">
+        <input type="password" id="loginPassword" placeholder="🔒 パスワード">
+        <button id="loginBtn">ログイン</button>
+      </section>
 
-  <p id="message"></p>
+      <section id="register" class="auth-section">
+        <h2>新しいアカウントを作成</h2>
+        <input type="email" id="regEmail" placeholder="📧 メールアドレス">
+        <input type="password" id="regPassword" placeholder="🔒 パスワード (6文字以上)">
+        <button id="regBtn">アカウント作成</button>
+      </section>
+    </div>
+
+    <p id="message"></p>
+  </div>
 </main>
+
+<script>
+// タブ切り替え
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    
+    // タブのアクティブ状態を切り替え
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    
+    // セクションの表示を切り替え
+    document.querySelectorAll('.auth-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    
+    // メッセージをクリア
+    document.getElementById('message').textContent = '';
+  });
+});
+</script>
 
 </body>
 </html>
