@@ -4,53 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Oilrs - Online</title>
-<script type="module" src="main.js"></script>
 <link rel="stylesheet" href="style.css">
+<script type="module" src="main.js"></script>
 </head>
 <body>
 
 <header><h1>Oilrs Online</h1></header>
 
 <nav>
-  <button class="tab-btn active" data-tab="login">ログイン/登録</button>
-  <button class="tab-btn" data-tab="news">ニュース</button>
+  <button class="tab-btn active" data-tab="news">ニュース</button>
   <button class="tab-btn" data-tab="server">サーバー情報</button>
   <button class="tab-btn" data-tab="game">ゲーム</button>
-  <button class="tab-btn" data-tab="account" onclick="location.href='account.html'">アカウント</button>
-  <button class="tab-btn" data-tab="friend" onclick="location.href='friend.html'">フレンド</button>
+  <button class="tab-btn" onclick="location.href='account.html'">アカウント</button>
+  <button class="tab-btn" onclick="location.href='friend.html'">フレンド</button>
+  <button class="tab-btn" onclick="logout()">ログアウト</button>
 </nav>
 
 <main>
-<section id="login" class="active">
-<h2>ログイン</h2>
-<input type="email" id="loginEmail" placeholder="メール"><br>
-<input type="password" id="loginPassword" placeholder="パスワード"><br>
-<button id="loginBtn">ログイン</button>
+  <section id="news" class="active">
+    <h2>ニュース</h2>
+    <ul id="newsList"></ul>
+  </section>
 
-<h2>新規登録</h2>
-<input type="email" id="regEmail" placeholder="メール"><br>
-<input type="password" id="regPassword" placeholder="パスワード"><br>
-<button id="regBtn">登録</button>
-<p id="message"></p>
-</section>
+  <section id="server">
+    <h2>サーバー情報</h2>
+    <p>オンラインプレイヤー数: <span id="onlineCount">0</span></p>
+  </section>
 
-<section id="news">
-<h2>ニュース</h2>
-<ul id="newsList"></ul>
-</section>
-
-<section id="server">
-<h2>サーバー情報</h2>
-<p>オンラインプレイヤー数: <span id="onlineCount">0</span></p>
-</section>
-
-<section id="game">
-<h2>ゲーム画面</h2>
-<div id="gameContainer"></div>
-<p>※簡易ブロスタ風ゲーム</p>
-</section>
+  <section id="game">
+    <h2>ゲーム画面</h2>
+    <div id="gameContainer"></div>
+    <p>※簡易ブロスタ風ゲーム</p>
+  </section>
 </main>
-<script type="module" src="phaserClient.js"></script>
 
+<script type="module" src="phaserClient.js"></script>
 </body>
 </html>
